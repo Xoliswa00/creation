@@ -64,4 +64,27 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+ public function companies()
+    {
+        return $this->belongsToMany(Company::class)
+                    ->withPivot('role')
+                    ->withTimestamps();
+    }
+
+    public function currentCompany()
+    {
+        return $this->belongsTo(Company::class, 'current_company_id');
+    }
+  public function role()
+    {
+        if (! $this->currentCompany) {
+            return null;
+        }
+
+        return $this->companies()
+            ->where('company_id', $this->current_company_id)
+            ->first()
+            ->pivot
+            ->role;
+    }
 }
