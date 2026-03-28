@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 use Laravel\Jetstream\Jetstream;
 use App\Models\Company;
+use app\Models\company_user;
 use App\Models\company_invitations;
 use App\Models\CompanyInvitation;
 use Illuminate\Support\Facades\DB;
@@ -70,6 +71,7 @@ public function create(array $input): User
                 ->where('domain_verified_at', '!=', null)
                 ->first();
 
+         
             if ($company) {
 
                 $company->users()->attach($user->id, [
@@ -92,9 +94,21 @@ public function create(array $input): User
             'plan' => 'starter',
         ]);
 
-        $company->users()->attach($user->id, [
-            'role' => 'owner',
-        ]);
+      if ($company) {
+
+    DB::table('company_users')->insert([
+        'company_id' => $company->id,
+        'user_id' => $user->id,
+        'role' => 'viewer',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $user->current_company_id = $company->id;
+    $user->save();
+
+    return $user;
+}
 
         $user->current_company_id = $company->id;
         $user->save();

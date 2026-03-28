@@ -12,12 +12,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
-             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-    $table->string('name');
-    $table->text('description')->nullable();
-    $table->decimal('price', 15, 2);
-    $table->enum('billing_type', ['once', 'recurring'])->default('once');
-    $table->decimal('vat_rate', 5, 2)->default(15.00);
+                $table->id();
+            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_group_id')->nullable()->constrained()->nullOnDelete(); 
+            $table->foreignId('product_category_id')->nullable()->constrained()->nullOnDelete();  
+                            
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->enum('type', ['service', 'product'])->default('service');
+            $table->enum('billing_type', ['once_off', 'recurring'])->default('once_off');
+            $table->enum('billing_cycle', ['monthly','yearly'])->nullable();
+
+
+
+
+        $table->boolean('is_active')->default(true);
+
     $table->timestamps();
         });
     }

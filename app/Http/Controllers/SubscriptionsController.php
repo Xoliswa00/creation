@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
 
+
 class SubscriptionsController extends Controller
 {
     /**

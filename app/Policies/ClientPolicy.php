@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\client;
 use Illuminate\Auth\Access\Response;
 
+
 class ClientPolicy
 {
     /**
@@ -13,7 +14,7 @@ class ClientPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->isPlatformOwner() || $user->isSystemAdmin();
     }
 
     /**
@@ -21,7 +22,7 @@ class ClientPolicy
      */
     public function view(User $user, client $client): bool
     {
-        return false;
+        return $user->isPlatformOwner() || $user->isSystemAdmin();
     }
 
     /**
@@ -37,7 +38,7 @@ class ClientPolicy
      */
     public function update(User $user, client $client): bool
     {
-        return false;
+        return $user->isPlatformOwner() || $user->isSystemAdmin();
     }
 
     /**
@@ -45,7 +46,7 @@ class ClientPolicy
      */
     public function delete(User $user, client $client): bool
     {
-        return false;
+        return $user->isPlatformOwner() || $user->isSystemAdmin();
     }
 
     /**
@@ -53,7 +54,7 @@ class ClientPolicy
      */
     public function restore(User $user, client $client): bool
     {
-        return false;
+        return $user->isPlatformOwner() || $user->isSystemAdmin();
     }
 
     /**
@@ -61,6 +62,6 @@ class ClientPolicy
      */
     public function forceDelete(User $user, client $client): bool
     {
-        return false;
+        return $user->isPlatformOwner() || $user->isSystemAdmin();
     }
 }

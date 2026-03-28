@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('companies', function (Blueprint $table) {
             $table->id();
+
+               $table->unsignedBigInteger('platform_owner_id')->nullable();
+               
+
+                $table->boolean('is_platform_company')->default(false);
+
             // Core Identity
             $table->string('name');
             $table->string('legal_name')->nullable();
@@ -64,6 +70,12 @@ return new class extends Migration
             $table->string('billing_email')->nullable();
             $table->string('plan')->default('basic');
 
+             $table->string('subscription_plan')->nullable();
+    $table->string('subscription_status')->default('active');
+    $table->date('subscription_renewal_date')->nullable();
+
+
+
 
 
 
@@ -72,6 +84,8 @@ return new class extends Migration
 
 
             $table->timestamps();
+                $table->softDeletes();
+
 
             // Indexing for performance
             $table->index('registration_number');

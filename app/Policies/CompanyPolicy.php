@@ -3,63 +3,74 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\company;
-use Illuminate\Auth\Access\Response;
+use App\Models\Company;
 
 class CompanyPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * View company list
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->isPlatformOwner() || $user->isSystemAdmin();
     }
 
     /**
-     * Determine whether the user can view the model.
+     * View specific company
      */
-    public function view(User $user, company $company): bool
+    public function view(User $user, Company $company): bool
     {
+        // Platform owner who manages the company
+        if ($user->isPlatformOwner() && $company->platform_owner_id === $user->id) {
+            return true;
+        }
+
+        // Client users belonging to company
+        if ($user->companies->contains($company->id)) {
+            return true;
+        }
+
         return false;
     }
 
     /**
-     * Determine whether the user can create models.
+     * Create company
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->isPlatformOwner();
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Update company
      */
-    public function update(User $user, company $company): bool
+    public function update(User $user, Company $company): bool
+    {
+        return $user->isPlatformOwner()
+            && $company->platform_owner_id === $user->id;
+    }
+
+    /**
+     * Delete company
+     */
+    public function delete(User $user, Company $company): bool
+    {
+        return $user->isPlatformOwner()
+            && $company->platform_owner_id === $user->id;
+    }
+
+    /**
+     * Restore company
+     */
+    public function restore(User $user, Company $company): bool
     {
         return false;
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Force delete
      */
-    public function delete(User $user, company $company): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, company $company): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, company $company): bool
+    public function forceDelete(User $user, Company $company): bool
     {
         return false;
     }

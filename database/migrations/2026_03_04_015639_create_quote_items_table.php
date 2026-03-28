@@ -13,13 +13,19 @@ return new class extends Migration
     {
         Schema::create('quote_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('quote_id')->constrained()->cascadeOnDelete();
-    $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+    $table->unsignedBigInteger('quote_id');
+    $table->foreign('quote_id')->references('id')->on('quotes')->cascadeOnDelete();
+    $table->unsignedBigInteger('product_id');
+    $table->foreign('product_id')->references('id')->on('products')->cascadeOnDelete();
+
+    
     $table->integer('quantity')->default(1);
     $table->decimal('unit_price', 15, 2);
     $table->decimal('vat_amount', 15, 2)->default(0);
     $table->decimal('total', 15, 2)->default(0);
     $table->timestamps();
+
+
         });
     }
 

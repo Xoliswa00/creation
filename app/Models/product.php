@@ -16,6 +16,8 @@ class product extends Model
         'price',
         'billing_type',
         'vat_rate',
+        'product_group_id',
+        'product_category_id',
     ];
     public function company()
     {
@@ -30,6 +32,34 @@ class product extends Model
     {
         return $this->hasMany(invoice_items::class);
     }
+    public function items()
+    {
+        return $this->hasMany(product_items::class);
+    }
+  
+    public function group()
+    {
+        return $this->belongsTo(product_group::class, 'product_group_id');
+    }
+    public function category()
+    {
+        return $this->belongsTo(category::class, 'product_category_id');
+    }
+    public function product_category()
+    {
+        return $this->belongsTo(product_category::class, 'product_category_id');
+    }
+    public function product_group()
+    {
+        return $this->belongsTo(product_group::class, 'product_group_id');
+    }
+    public function pricing()
+    {
+        return $this->hasMany(product_price::class, 'product_id');
+    }
+    
+
+
     
 
 

@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('quotes', function (Blueprint $table) {
+            $table->id();
            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
     $table->foreignId('client_id')->constrained()->cascadeOnDelete();
     $table->string('quote_number')->unique();

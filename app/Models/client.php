@@ -21,6 +21,11 @@ class client extends Model
         'province',
         'postal_code',
         'country',
+            'contact_person',
+            'website',
+            'tax_number',
+            'vat_number',
+            'user_id'
     ];
 
     // Relationships
@@ -37,4 +42,36 @@ class client extends Model
     public function invoices()
     {
         return $this->hasMany(Invoice::class);
-    }}
+    }
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);      }
+
+        public function user(){
+            return $this->belongsTo(User::class);
+        }
+
+
+                public function isBillingReady()
+        {
+            return $this->name
+            && $this->email
+            && $this->phone
+                && $this->billing_address
+                && $this->vat_number
+                && $this->tax_number
+                && $this->contact_person;
+        }
+
+        
+
+
+   
+    
+    
+    }

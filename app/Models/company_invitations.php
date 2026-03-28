@@ -15,6 +15,9 @@ class company_invitations extends Model
         'role',
         'token',
         'expires_at',
+        'client_id',
+         'status',  
+
     ];
 
     protected $casts = [
@@ -29,5 +32,10 @@ class company_invitations extends Model
     public function isExpired()
     {
         return $this->expires_at->isPast();
+    }
+   
+    public function client()
+    {
+        return $this->belongsTo(Client::class, 'client_id', 'id');
     }
 }

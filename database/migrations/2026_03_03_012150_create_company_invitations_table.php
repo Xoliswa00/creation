@@ -13,16 +13,25 @@ return new class extends Migration
     {
         Schema::create('company_invitations', function (Blueprint $table) {
             $table->id();
-                $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-    $table->string('email');
+            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->string('email');
+            $table->dateTime('expires_at')->nullable();
+             $table->foreignId('client_id')->nullable()->constrained('clients')->nullOnDelete();
+             $table->enum('status', ['pending', 'accepted', 'declined'])->default('pending');
+        
 
-                 $table->enum('role', [
-        'owner',
-        'admin',
-        'finance',
-        'viewer'
-    ])->default('viewer');    $table->string('token')->unique();
-    $table->timestamp('expires_at')->nullable();
+            $table->enum('role', [
+                'owner',
+                'admin',
+                'client_user',
+                'viewer'
+            ])->default('client_user');
+            $table->string('token')->unique();
+  
+             $table->dateTime('accepted_at')->nullable();
+   
+
+             $table->index(['company_id', 'email']);
             $table->timestamps();
         });
     }
