@@ -16,6 +16,7 @@ class product extends Model
         'price',
         'billing_type',
         'vat_rate',
+
         'product_group_id',
         'product_category_id',
     ];
@@ -57,6 +58,10 @@ class product extends Model
     {
         return $this->hasMany(product_price::class, 'product_id');
     }
+    public function prices()
+{
+    return $this->hasMany(product_price::class);
+}
     
 
 

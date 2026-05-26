@@ -16,7 +16,23 @@ return new class extends Migration
            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
     $table->foreignId('client_id')->constrained()->cascadeOnDelete();
     $table->string('quote_number')->unique();
-    $table->enum('status', ['draft', 'sent', 'approved', 'rejected'])->default('draft');
+$table->enum('status', [
+    'draft',
+    'submitted',
+    'under_review',
+    'sent',
+    'viewed',
+    'approved',
+    'rejected',
+    'invoiced'
+])->default('draft');
+$table->enum('source', ['client', 'internal'])->default('internal');
+$table->text('internal_notes')->nullable();
+$table->text('client_notes')->nullable();
+
+$table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+    $table->decimal('subtotal', 15, 2)->default(0);
+    $table->decimal('vat', 15, 2)->default(0);
     $table->decimal('total', 15, 2)->default(0);
     $table->timestamps();
         });

@@ -24,12 +24,11 @@
 <!-- Vite Assets -->
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-<!-- Custom Styles -->
-<link rel="stylesheet" href="{{ asset('css/style.css') }}">
-<link rel="stylesheet" href="{{ asset('resources/js/app.js') }}">
+
 
 @livewireStyles
 @vite(['resources/css/app.css', 'resources/js/app.js'])
+
 
 </head>
 <body class="font-sans antialiased bg-white text-slate-900 selection:bg-brand-gold selection:text-slate-900">

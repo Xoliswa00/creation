@@ -135,5 +135,29 @@ class User extends Authenticatable
     {
         return $this->hasMany(Client::class);
     }
+
+    /**
+     * Return the current company model instance based on current_company_id.
+     * This ensures auth()->user()->currentCompany->quotes() works even if the
+     * currentCompany() relation was misconfigured elsewhere.
+     */
+    public function getCurrentCompanyAttribute()
+    {
+        if (! $this->current_company_id) {
+            return null;
+        }
+
+        return $this->companies()
+                    ->where('companies.id', $this->current_company_id)
+                    ->first();
+    }
+
+    /**
+     * Expose role as a property so checks like $this->role === 'admin' work.
+     */
+    public function getRoleAttribute()
+    {
+        return $this->role();
+    }
     
 }

@@ -153,21 +153,51 @@
 const groups = @json($groups);
 
 /* GROUP → CATEGORY */
-document.getElementById('group-select').addEventListener('change', function () {
-    let groupId = this.value;
-    document.getElementById('group-hidden').value = groupId;
-    let categorySelect = document.getElementById('category-select');
-    categorySelect.innerHTML = '<option value="">Select Category</option>';
-    let selectedGroup = groups.find(g => g.id == groupId);
-    if (selectedGroup) {
-        selectedGroup.categories.forEach(cat => {
-            let option = document.createElement('option');
-            option.value = cat.id; option.text = cat.name;
-            categorySelect.appendChild(option);
-        });
-    }
-});
 
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const groupSelect = document.getElementById('group-select');
+    const categorySelect = document.getElementById('category-select');
+    const groupHidden = document.getElementById('group-hidden');
+
+    const oldGroup = groupHidden.value;
+    const oldCategory = "{{ old('category_id') }}"; // Blade inject
+
+    function loadCategories(groupId, selectedCategory = null) {
+        categorySelect.innerHTML = '<option value="">Select Category</option>';
+
+        let selectedGroup = groups.find(g => g.id == groupId);
+
+        if (selectedGroup) {
+            selectedGroup.categories.forEach(cat => {
+                let option = document.createElement('option');
+                option.value = cat.id;
+                option.text = cat.name;
+
+                if (selectedCategory && selectedCategory == cat.id) {
+                    option.selected = true;
+                }
+
+                categorySelect.appendChild(option);
+            });
+        }
+    }
+
+    // On change
+    groupSelect.addEventListener('change', function () {
+        let groupId = this.value;
+        groupHidden.value = groupId;
+        loadCategories(groupId);
+    });
+
+    // 🔥 On reload (important part)
+    if (oldGroup) {
+        groupSelect.value = oldGroup;
+        loadCategories(oldGroup, oldCategory);
+    }
+
+});
 /* BILLING TYPE TOGGLE */
 document.getElementById('billing_type').addEventListener('change', function () {
     document.getElementById('billing_cycle_div').classList.toggle('hidden', this.value !== 'recurring');

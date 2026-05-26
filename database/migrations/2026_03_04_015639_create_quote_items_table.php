@@ -17,6 +17,10 @@ return new class extends Migration
     $table->foreign('quote_id')->references('id')->on('quotes')->cascadeOnDelete();
     $table->unsignedBigInteger('product_id');
     $table->foreign('product_id')->references('id')->on('products')->cascadeOnDelete();
+    $table->unsignedBigInteger('product_item')->nullable();
+    $table->foreign('product_item')->references('id')->on('product_items')->cascadeOnDelete();
+    $table->string('description')->nullable();
+    
 
     
     $table->integer('quantity')->default(1);

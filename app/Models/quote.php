@@ -15,6 +15,15 @@ class quote extends Model
         'quote_number',
         'status',
         'total',
+        'status',
+        'source',
+        'internal_note',
+        'client_note',
+        'subtotal',
+        'vat',
+        'created_by',
+        
+
     ];
     public function company()
     {
@@ -28,4 +37,9 @@ class quote extends Model
     {
         return $this->hasMany(Quote_items::class);
     }
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+    
 }

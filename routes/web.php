@@ -33,6 +33,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('customers', ClientController::class);
     Route::resource('invoices', InvoiceController::class);
     Route::resource('quotes', QuoteController::class);
+    route::post('quotes/{quote}/send', [QuoteController::class, 'send'])->name('quotes.send');
         Route::resource('subscriptions', SubscriptionsController::class);
     Route::resource('payments', PaymentController::class);
     Route::resource('companies', CompanyController::class);

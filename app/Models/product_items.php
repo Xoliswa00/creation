@@ -10,6 +10,7 @@ class product_items extends Model
     protected $fillable = [
         'product_id',
         'name',
+        
         'description',
         'sort_order',
     ];

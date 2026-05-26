@@ -77,6 +77,7 @@ public function create()
 public function store(Request $request)
 {
     $company = auth()->user()->managedCompanies->first();
+
     $validated = $request->validate([
         'name' => 'required|string',
         'category' => 'nullable|string',
@@ -98,8 +99,9 @@ public function store(Request $request)
         // items
         'items' => 'nullable|array',
         'items.*.name' => 'required|string',
-    
-        'items.*.is_included' => 'string|in:true,false',
+        'items.*.description'=>'required|string',
+
+        'items.*.is_included' => 'string|in:on,off',
         'items.*.price' => 'nullable|numeric'
     ]);
 
