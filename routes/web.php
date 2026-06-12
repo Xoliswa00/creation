@@ -12,7 +12,9 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductItemController;
-use App\Http\Controllers\ProductPriceController;    
+use App\Http\Controllers\ProductPriceController;
+use App\Http\Controllers\ServiceComboController;
+use App\Http\Controllers\PromotionController;
 
 
 
@@ -49,9 +51,13 @@ Route::delete('items/{item}', [ProductItemController::class, 'destroy']);
 // Prices
 Route::post('products/{product}/prices', [ProductPriceController::class, 'store']);
 
+    // Service Combos
+    Route::resource('combos', ServiceComboController::class);
+    Route::post('combos/{combo}/toggle', [ServiceComboController::class, 'toggle'])->name('combos.toggle');
 
-    
-      
+    // Promotions
+    Route::resource('promotions', PromotionController::class);
+    Route::post('promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('promotions.toggle');
 
 
 
