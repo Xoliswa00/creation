@@ -12,6 +12,7 @@ use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Notifications\QuoteStatusNotification;
+use App\Notifications\ClientQuoteSentNotification;
 
 
 
@@ -142,16 +143,29 @@ public function create()
 
     public function send($id)
     {
-        $quote = Quote::with('client')->findOrFail($id);
+        $quote = Quote::with('client.user')->findOrFail($id);
 
         $quote->update(['status' => 'sent']);
 
+        $companyName = auth()->user()->managedCompanies->first()->name ?? config('app.name');
+
+        // Notify owner dashboard
         auth()->user()->notify(new QuoteStatusNotification(
             quoteNumber: $quote->quote_number,
             status:      'sent',
             clientName:  optional($quote->client)->name ?? 'Client',
             quoteId:     $quote->id,
         ));
+
+        // Notify the client
+        if ($quote->client && $quote->client->user) {
+            $quote->client->user->notify(new ClientQuoteSentNotification(
+                quoteNumber: $quote->quote_number,
+                companyName: $companyName,
+                total:       (float) $quote->total,
+                quoteId:     $quote->id,
+            ));
+        }
 
         return back();
     }

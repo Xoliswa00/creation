@@ -8,10 +8,10 @@
         // Role-based navigation
         $navItems = $user->isClientUser()
             ? [
-                ['route' => 'clients.index', 'label' => 'Dashboard'],
-                ['route' => 'clients.index', 'label' => 'My Quotes'],
-                ['route' => 'clients.index', 'label' => 'My Invoices'],
-                ['route' => 'clients.profile', 'label' => 'Company Profile'],
+                ['route' => 'portal.dashboard', 'label' => 'Dashboard'],
+                ['route' => 'portal.messages',  'label' => 'Messages'],
+                ['route' => 'notifications.index', 'label' => 'Notifications'],
+                ['route' => 'clients.profile',  'label' => 'My Profile'],
             ]
             : [
                 ['route' => 'dashboard', 'label' => 'Overview'],
@@ -65,8 +65,7 @@
             <!-- RIGHT: Actions -->
             <div class="hidden sm:flex items-center space-x-3">
 
-                @if(!$user->isClientUser())
-                {{-- NOTIFICATION BELL (owner only) --}}
+                {{-- NOTIFICATION BELL (all users) --}}
                 @php $unreadCount = $user->unreadNotifications()->count(); @endphp
                 <x-dropdown align="right" width="80">
                     <x-slot name="trigger">
@@ -144,7 +143,6 @@
                         </div>
                     </x-slot>
                 </x-dropdown>
-                @endif
 
                 <!-- Workspace Dropdown -->
                 <x-dropdown align="right" width="64">

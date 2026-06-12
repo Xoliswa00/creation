@@ -18,6 +18,8 @@ use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\ServiceCategoryController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\CommunicationController;
+use App\Http\Controllers\ClientPortalController;
 
 
 
@@ -74,6 +76,15 @@ Route::post('products/{product}/prices', [ProductPriceController::class, 'store'
     Route::post('notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.mark-read');
     Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
     Route::delete('notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+
+    // Owner ↔ Client messaging (owner side)
+    Route::get('clients/{client}/messages', [CommunicationController::class, 'thread'])->name('communications.thread');
+    Route::post('clients/{client}/messages', [CommunicationController::class, 'store'])->name('communications.store');
+
+    // Client portal
+    Route::get('portal/dashboard', [ClientPortalController::class, 'dashboard'])->name('portal.dashboard');
+    Route::get('portal/messages', [CommunicationController::class, 'clientIndex'])->name('portal.messages');
+    Route::post('portal/messages/reply', [CommunicationController::class, 'clientReply'])->name('portal.messages.reply');
 
 
 

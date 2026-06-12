@@ -10,6 +10,7 @@ use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\PaymentReceivedNotification;
+use App\Notifications\ClientPaymentConfirmedNotification;
 
 
 
@@ -62,12 +63,25 @@ class PaymentController extends Controller
                 $invoice->update(['status' => 'paid']);
             }
 
+            $companyName = auth()->user()->managedCompanies->first()->name ?? config('app.name');
+
+            // Notify owner dashboard
             auth()->user()->notify(new PaymentReceivedNotification(
                 invoiceNumber: $invoice->invoice_number ?? "INV-{$invoice->id}",
                 amount:        (float) $validated['amount'],
                 clientName:    optional($invoice->client)->name ?? 'Client',
                 invoiceId:     $invoice->id,
             ));
+
+            // Notify client with payment confirmation
+            if ($invoice->client && $invoice->client->user) {
+                $invoice->client->user->notify(new ClientPaymentConfirmedNotification(
+                    invoiceNumber: $invoice->invoice_number ?? "INV-{$invoice->id}",
+                    companyName:   $companyName,
+                    amount:        (float) $validated['amount'],
+                    invoiceId:     $invoice->id,
+                ));
+            }
 
             return $payment;
         });
