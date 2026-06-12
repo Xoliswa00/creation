@@ -1,0 +1,237 @@
+I need you to implement a series of features on this Laravel 11 + Jetstream SaaS billing/booking system. The project is a multi-tenant platform for service businesses (salons, spas, etc.). Implement all of the following in order:
+
+================================================================================
+1. SERVICE COMBOS & PROMOTIONS
+================================================================================
+
+SERVICE COMBOS — owners bundle their services with a discount:
+- Migration: service_combos (id, company_id, name, description, discount_type
+  enum[percentage,fixed], discount_value decimal, valid_from datetime nullable,
+  valid_until datetime nullable, is_active bool) + service_combo_items pivot
+  (service_combo_id, product_id)
+- Model ServiceCombo: belongsToMany products via service_combo_items; computed
+  attributes total_service_price, combo_price, savings; isLive() checks
+  is_active + date range
+- Controller ServiceComboController: full CRUD scoped to
+  auth()->user()->currentCompany, plus toggle() POST route
+- Views: service-combos/index (table with Live/Scheduled/Expired/Inactive
+  badges, savings column) and service-combos/create (Alpine.js comboBuilder()
+  live pricing sidebar with discount fields and datetime inputs)
+- Routes: Route::resource('combos', ...) + POST combos/{combo}/toggle
+
+PROMOTIONS — time-based discount codes:
+- Migration: promotions (id, company_id, name, description, code string unique,
+  discount_type, discount_value, applies_to enum[all,products,combos],
+  valid_from, valid_until, max_uses nullable, used_count default 0, is_active bool)
+- Model Promotion: isLive(), status_label accessor returning
+  Live/Scheduled/Expired/Exhausted
+- Controller PromotionController: full CRUD + toggle() + generateCode() JSON
+  endpoint (returns random 8-char uppercase code)
+- Views: promotions/index (usage progress bar, color-coded status badges) and
+  promotions/create (radio applies_to with JS styling, inline code generator button)
+- Routes: Route::resource('promotions', ...) + POST promotions/{promotion}/toggle
+
+================================================================================
+2. SERVICE CATEGORIES + BOOKING MENU
+================================================================================
+
+SERVICE CATEGORIES — company-owned taxonomy for products:
+- Migration: service_categories (id, company_id, name, description, color
+  varchar, icon varchar, sort_order int default 0, is_active bool)
+- Migration: alter products table to add service_category_id (FK nullable)
+  and duration_minutes (int nullable)
+- Model ServiceCategory: static colorClasses() returning 8-color Tailwind map;
+  colorClass($type) helper for bg/text/border; services() and activeServices()
+  hasMany Product
+- Model Product: update fillable + add serviceCategory() belongsTo +
+  duration_label accessor (formats minutes to "1h 30min")
+- Controller ServiceCategoryController: CRUD scoped to company + apiList() JSON
+  endpoint at GET api/service-categories
+- Update ProductController@create() to pass serviceCategories; update store()
+  validation to include service_category_id + duration_minutes
+- Update products/create.blade.php to add a "Booking Configuration" section
+  with category dropdown + duration input
+- View service-categories/index: color-coded category cards with service count
+- View service-categories/create: Alpine.js emoji preview, 8-color grid
+  radio picker
+
+BOOKING MENU — client-facing service browser:
+- Controller BookingController@menu(): loads categories with activeServices
+  eager-loaded (with prices), uncategorized services, supports ?category= filter
+- View booking/menu.blade.php: dark hero header, category filter tabs, service
+  cards with colored accent strips, price/duration/add-ons display
+- Route: GET booking -> booking.menu
+
+================================================================================
+3. NOTIFICATIONS + MAIL FIX
+================================================================================
+
+- Fix config/mail.php default mailer from 'log' to 'smtp'
+- Update .env.example with SMTP examples (Gmail port 587, Mailtrap, Resend)
+- Migration: standard Laravel notifications table (uuid id, type, morphs
+  notifiable, data text, read_at, timestamps) — only if it doesn't exist
+- Notification classes (via database + mail channels):
+    QuoteStatusNotification — owner notified on quote sent/approved/rejected
+    PaymentReceivedNotification — owner notified on payment
+    NewClientNotification — owner notified on new client created
+    InvoiceSentNotification — owner notified on invoice sent
+- Update QuoteController@send(), PaymentController@store(),
+  ClientController@store() to fire their respective notifications to the
+  company's platform owner user
+- Add notification bell dropdown to nav (navigation-menu.blade.php) for all
+  users — shows last 6 notifications with icon map
+  (quote/payment/invoice/client/bell), mark-all-read button, unread dot badge
+- Controller NotificationController: index() (paginates + marks all read on
+  open), markRead(), markAllRead(), destroy()
+- View notifications/index.blade.php: full paginated list with icons and
+  dismiss buttons
+- Routes: GET notifications, POST notifications/{id}/read,
+  POST notifications/mark-all-read, DELETE notifications/{id}
+
+================================================================================
+4. TWO-WAY OWNER <-> CLIENT MESSAGING
+================================================================================
+
+- Migration: communications (id, company_id, client_id, from_user_id nullable,
+  to_user_id nullable, subject varchar nullable, body text, is_from_owner bool
+  default true, read_at timestamp nullable, timestamps)
+- Model Communication: belongsTo company/client/fromUser/toUser; markRead() method
+- Notification DirectMessageNotification (DB + mail): $fromOwner bool determines
+  URL routing — owner gets /clients/{id}/messages, client gets /portal/messages
+- Controller CommunicationController:
+    thread(Client $client) — owner views thread, marks client messages read
+    store(Request, Client) — owner sends message, notifies client
+    clientIndex() — client views their thread, marks owner messages read
+    clientReply(Request) — client sends reply, notifies owner
+- Views:
+    communications/thread.blade.php — chat-bubble UI (owner = right dark,
+      client = left white), compose form with optional subject
+    communications/client.blade.php — mirrored (client = right dark,
+      owner = left white), reply-only form
+- Client portal notifications: ClientQuoteSentNotification,
+  ClientInvoiceSentNotification, ClientPaymentConfirmedNotification — sent to
+  client user when owner sends quote/invoice/records payment
+- Controller ClientPortalController@dashboard(): loads client with
+  quotes/invoices/payments, $unreadMessages, $unreadNotifCount,
+  $recentNotifications
+- View portal/dashboard.blade.php: stats row (quotes/invoices/unread
+  msgs/unread notifs), notification feed, recent quotes/invoices list,
+  message CTA (amber if unread)
+- Nav: client nav = portal.dashboard / portal.messages / notifications.index /
+  clients.profile; remove !isClientUser() guard from bell so all users see it
+- Routes: GET/POST clients/{client}/messages, GET portal/dashboard,
+  GET/POST portal/messages/reply
+
+================================================================================
+5. PLATFORM BILLING SYSTEM (SYSTEM OWNER -> TENANT COMPANIES)
+================================================================================
+
+This is the billing layer between you (the developer/system owner) and the
+businesses using the SaaS platform.
+
+MIGRATIONS:
+- Alter subscriptions table: add company_id, client_id, invoice_id, frequency
+  (monthly/quarterly/yearly), next_invoice_date, active bool
+- Create platform_invoices (id, company_id FK, invoice_number unique, plan,
+  amount decimal, status enum[unpaid,paid,overdue,cancelled] default unpaid,
+  due_date date, billing_period_start date, billing_period_end date,
+  paid_at timestamp nullable, payment_method nullable,
+  payment_reference nullable, notes text nullable)
+- Alter companies table: add grace_period_ends_at timestamp nullable,
+  suspended_at timestamp nullable, last_billing_date timestamp nullable
+
+MODEL PlatformInvoice: casts, isOverdue(), days_overdue accessor,
+  status_badge accessor (returns label + Tailwind class), static
+  generateNumber() (format: PI-YYYYMM-0001)
+
+MODEL Company updates: add new fillable fields + casts;
+  platformInvoices() hasMany; unpaidPlatformInvoices() scope;
+  static planAmount(string $plan) (basic=299, premium=599, enterprise=1299);
+  isInGrace(), graceDaysLeft(), billingStatusLabel(), billingStatusClass()
+
+SERVICE PlatformBillingService:
+  generateInvoice(Company): creates invoice due in 7 days, updates
+    last_billing_date, notifies owner via BillingInvoiceCreatedNotification
+  runDailyCheck():
+    1. Mark unpaid -> overdue where due_date < today
+    2. For newly overdue (no grace set): set grace_period_ends_at = now()+5days,
+       notify via BillingGracePeriodStartedNotification
+    3. For companies in grace: at 2 days left and 1 day left, notify via
+       BillingGracePeriodExpiringNotification
+    4. For companies where grace_period_ends_at <= now(): set status=suspended,
+       suspended_at=now(), clear grace, notify via
+       BillingServiceSuspendedNotification
+  recordPayment(PlatformInvoice, method, reference): mark paid, restore company
+    to active, clear grace/suspension fields, if was suspended notify via
+    BillingServiceReactivatedNotification
+
+5 NOTIFICATION CLASSES (DB + mail):
+  BillingInvoiceCreatedNotification
+  BillingGracePeriodStartedNotification
+  BillingGracePeriodExpiringNotification
+  BillingServiceSuspendedNotification
+  BillingServiceReactivatedNotification
+
+COMMAND billing:check (app/Console/Commands/CheckPlatformBilling.php):
+  calls PlatformBillingService@runDailyCheck()
+
+SCHEDULER in routes/console.php:
+  Schedule::command('billing:check')->dailyAt('08:00');
+
+MIDDLEWARE CheckCompanySuspension: appended to web group; if company is
+  suspended, redirect to /billing with error flash — EXCEPT allow through:
+  billing*, notifications*, logout; system admins bypass entirely.
+  Register alias company.suspension in bootstrap/app.php
+
+CONTROLLER BillingController:
+  index() — platform owner: current plan + cost, grace countdown bar
+    (with % progress), suspended banner, outstanding invoices, invoice history
+  show(PlatformInvoice) — invoice detail + EFT payment instructions if unpaid
+  adminIndex() — system admin only: all tenant companies with billing status
+    badges, stats (total/grace/suspended/unpaid revenue)
+  adminShow(Company) — per-company overview + invoice table with inline
+    Mark Paid form
+  adminGenerateInvoice(Company) — POST: generate invoice + notify owner
+  adminMarkPaid(Request, PlatformInvoice) — POST: record payment, reactivate
+  adminSuspend(Company) / adminReactivate(Company) — manual override
+
+VIEWS: billing/index.blade.php, billing/show.blade.php,
+  billing/admin/index.blade.php, billing/admin/show.blade.php
+
+ROUTES (inside auth middleware group):
+  Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
+  Route::get('billing/{invoice}', [BillingController::class, 'show'])->name('billing.show');
+  Route::prefix('admin')->name('admin.')->group(function () {
+      Route::get('billing', [BillingController::class, 'adminIndex'])->name('billing.index');
+      Route::get('billing/{company}', [BillingController::class, 'adminShow'])->name('billing.show');
+      Route::post('billing/{company}/generate', [BillingController::class, 'adminGenerateInvoice'])->name('billing.generate');
+      Route::post('billing/{company}/suspend', [BillingController::class, 'adminSuspend'])->name('billing.suspend');
+      Route::post('billing/{company}/reactivate', [BillingController::class, 'adminReactivate'])->name('billing.reactivate');
+      Route::post('billing/invoices/{invoice}/mark-paid', [BillingController::class, 'adminMarkPaid'])->name('billing.mark-paid');
+  });
+
+NAV (navigation-menu.blade.php): platform owners see "Billing" link;
+  system admins get separate nav with "Platform Billing" -> admin.billing.index
+
+APP LAYOUT (layouts/app.blade.php): add session error flash banner (red bar
+  at top with "View Billing ->" link) for suspended account redirects
+
+================================================================================
+GENERAL CONVENTIONS USED THROUGHOUT
+================================================================================
+
+- All queries scoped to auth()->user()->currentCompany->id (company_id)
+- Tailwind CSS + Alpine.js (no extra JS libraries)
+- Chat bubbles: owner = right-aligned dark (bg-slate-900 text-white
+  rounded-tr-none), client = left-aligned light (bg-white border rounded-tl-none)
+- Status badges use bg-{color}-100 text-{color}-700 border-{color}-200 pattern
+- All views extend <x-app-layout>
+- Blade components: x-dropdown, x-dropdown-link from Jetstream
+- User roles: platform_owner, client_user, system_admin
+  (checked via $user->role === '...')
+- User model has isClientUser(), isPlatformOwner(), isSystemAdmin() methods
+
+================================================================================
+Implement all 5 sections completely: migrations first, then models, then
+controllers, then views, then routes.
+================================================================================
