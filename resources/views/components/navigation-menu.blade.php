@@ -13,13 +13,20 @@
                 ['route' => 'notifications.index', 'label' => 'Notifications'],
                 ['route' => 'clients.profile',  'label' => 'My Profile'],
             ]
-            : [
-                ['route' => 'dashboard', 'label' => 'Overview'],
-                ['route' => 'products.index', 'label' => 'Products'],
-                ['route' => 'clients.index', 'label' => 'Clients'],
-                ['route' => 'quotes.index', 'label' => 'Quotes'],
-                ['route' => 'invoices.index', 'label' => 'Invoices'],
-            ];
+            : ($user->isSystemAdmin()
+                ? [
+                    ['route' => 'dashboard',           'label' => 'Overview'],
+                    ['route' => 'admin.billing.index',  'label' => 'Platform Billing'],
+                    ['route' => 'clients.index',        'label' => 'Clients'],
+                ]
+                : [
+                    ['route' => 'dashboard',      'label' => 'Overview'],
+                    ['route' => 'products.index',  'label' => 'Products'],
+                    ['route' => 'clients.index',   'label' => 'Clients'],
+                    ['route' => 'quotes.index',    'label' => 'Quotes'],
+                    ['route' => 'invoices.index',  'label' => 'Invoices'],
+                    ['route' => 'billing.index',   'label' => 'Billing'],
+                ]);
     @endphp
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -19,7 +19,7 @@ use App\Http\Controllers\ServiceCategoryController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\CommunicationController;
-use App\Http\Controllers\ClientPortalController;
+use App\Http\Controllers\BillingController;
 
 
 
@@ -86,8 +86,18 @@ Route::post('products/{product}/prices', [ProductPriceController::class, 'store'
     Route::get('portal/messages', [CommunicationController::class, 'clientIndex'])->name('portal.messages');
     Route::post('portal/messages/reply', [CommunicationController::class, 'clientReply'])->name('portal.messages.reply');
 
+    // Platform owner billing (own subscription)
+    Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::get('billing/{invoice}', [BillingController::class, 'show'])->name('billing.show');
 
-
-    
+    // System admin billing management
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('billing', [BillingController::class, 'adminIndex'])->name('billing.index');
+        Route::get('billing/{company}', [BillingController::class, 'adminShow'])->name('billing.show');
+        Route::post('billing/{company}/generate', [BillingController::class, 'adminGenerateInvoice'])->name('billing.generate');
+        Route::post('billing/{company}/suspend', [BillingController::class, 'adminSuspend'])->name('billing.suspend');
+        Route::post('billing/{company}/reactivate', [BillingController::class, 'adminReactivate'])->name('billing.reactivate');
+        Route::post('billing/invoices/{invoice}/mark-paid', [BillingController::class, 'adminMarkPaid'])->name('billing.mark-paid');
+    });
 });
 Route::get('/client-portal/accept/{token}', [ClientController::class, 'accept'])->name('client.invitation.accept')->middleware('signed');
