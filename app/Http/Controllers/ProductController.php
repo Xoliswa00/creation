@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\product_group;
 use App\Models\product_category;
+use App\Models\ServiceCategory;
 
 
 class ProductController extends Controller
@@ -69,10 +70,16 @@ public function index()
 }
 public function create()
     {
-        //
-        $groups=product_group::with('categories')->get();
+        $groups = product_group::with('categories')->get();
 
-        return view('products.create',compact('groups'));}   
+        $serviceCategories = ServiceCategory::where('company_id', auth()->user()->managedCompanies->first()->id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        return view('products.create', compact('groups', 'serviceCategories'));
+    }   
 
 public function store(Request $request)
 {
@@ -101,8 +108,10 @@ public function store(Request $request)
         'items.*.name' => 'required|string',
         'items.*.description'=>'required|string',
 
-        'items.*.is_included' => 'string|in:on,off',
-        'items.*.price' => 'nullable|numeric'
+        'items.*.is_included'    => 'string|in:on,off',
+        'items.*.price'          => 'nullable|numeric',
+        'service_category_id'   => 'nullable|exists:service_categories,id',
+        'duration_minutes'       => 'nullable|integer|min:1|max:480',
     ]);
 
     DB::transaction(function () use ($validated) {
@@ -111,13 +120,15 @@ public function store(Request $request)
 
         // 1. Create product
         $product = Product::create([
-            'company_id' => $company->id,
-            'name' => $validated['name'],
-            'product_group_id' => $validated['product_group_id'] ?? null,
+            'company_id'          => $company->id,
+            'name'                => $validated['name'],
+            'product_group_id'    => $validated['product_group_id'] ?? null,
             'product_category_id' => $validated['product_category_id'] ?? null,
-            'description' => $validated['description'] ?? null,
-            'billing_type' => $validated['billing_type'],
-            'billing_cycle' => $validated['billing_cycle'] ?? null,
+            'service_category_id' => $validated['service_category_id'] ?? null,
+            'duration_minutes'    => $validated['duration_minutes'] ?? null,
+            'description'         => $validated['description'] ?? null,
+            'billing_type'        => $validated['billing_type'],
+            'billing_cycle'       => $validated['billing_cycle'] ?? null,
         ]);
 
         // 2. Create items

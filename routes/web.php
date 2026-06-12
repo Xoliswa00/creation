@@ -15,6 +15,8 @@ use App\Http\Controllers\ProductItemController;
 use App\Http\Controllers\ProductPriceController;
 use App\Http\Controllers\ServiceComboController;
 use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\ServiceCategoryController;
+use App\Http\Controllers\BookingController;
 
 
 
@@ -58,6 +60,13 @@ Route::post('products/{product}/prices', [ProductPriceController::class, 'store'
     // Promotions
     Route::resource('promotions', PromotionController::class);
     Route::post('promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('promotions.toggle');
+
+    // Service Categories
+    Route::resource('service-categories', ServiceCategoryController::class);
+    Route::get('api/service-categories', [ServiceCategoryController::class, 'apiList'])->name('service-categories.api');
+
+    // Booking menu
+    Route::get('booking', [BookingController::class, 'menu'])->name('booking.menu');
 
 
 
