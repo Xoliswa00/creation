@@ -42,6 +42,15 @@
 
         {{-- Page Content --}}
         <main class="flex-1 pt-16 lg:pt-20">
+            @if(session('error'))
+            <div class="bg-rose-600 text-white text-sm font-bold px-6 py-3 text-center">
+                {{ session('error') }}
+                @if(request()->routeIs('billing.*'))
+                @else
+                    <a href="{{ route('billing.index') }}" class="underline ml-2">View Billing →</a>
+                @endif
+            </div>
+            @endif
             {{ $slot }}
         </main>
 

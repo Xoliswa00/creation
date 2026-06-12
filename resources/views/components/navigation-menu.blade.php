@@ -8,18 +8,25 @@
         // Role-based navigation
         $navItems = $user->isClientUser()
             ? [
-                ['route' => 'clients.index', 'label' => 'Dashboard'],
-                ['route' => 'clients.index', 'label' => 'My Quotes'],
-                ['route' => 'clients.index', 'label' => 'My Invoices'],
-                ['route' => 'clients.profile', 'label' => 'Company Profile'],
+                ['route' => 'portal.dashboard', 'label' => 'Dashboard'],
+                ['route' => 'portal.messages',  'label' => 'Messages'],
+                ['route' => 'notifications.index', 'label' => 'Notifications'],
+                ['route' => 'clients.profile',  'label' => 'My Profile'],
             ]
-            : [
-                ['route' => 'dashboard', 'label' => 'Overview'],
-                ['route' => 'products.index', 'label' => 'Products'],
-                ['route' => 'clients.index', 'label' => 'Clients'],
-                ['route' => 'quotes.index', 'label' => 'Quotes'],
-                ['route' => 'invoices.index', 'label' => 'Invoices'],
-            ];
+            : ($user->isSystemAdmin()
+                ? [
+                    ['route' => 'dashboard',           'label' => 'Overview'],
+                    ['route' => 'admin.billing.index',  'label' => 'Platform Billing'],
+                    ['route' => 'clients.index',        'label' => 'Clients'],
+                ]
+                : [
+                    ['route' => 'dashboard',      'label' => 'Overview'],
+                    ['route' => 'products.index',  'label' => 'Products'],
+                    ['route' => 'clients.index',   'label' => 'Clients'],
+                    ['route' => 'quotes.index',    'label' => 'Quotes'],
+                    ['route' => 'invoices.index',  'label' => 'Invoices'],
+                    ['route' => 'billing.index',   'label' => 'Billing'],
+                ]);
     @endphp
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -64,6 +71,85 @@
 
             <!-- RIGHT: Actions -->
             <div class="hidden sm:flex items-center space-x-3">
+
+                {{-- NOTIFICATION BELL (all users) --}}
+                @php $unreadCount = $user->unreadNotifications()->count(); @endphp
+                <x-dropdown align="right" width="80">
+                    <x-slot name="trigger">
+                        <button class="relative p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                </path>
+                            </svg>
+                            @if($unreadCount > 0)
+                            <span class="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white ring-2 ring-white">
+                                {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+                            </span>
+                            @endif
+                        </button>
+                    </x-slot>
+
+                    <x-slot name="content">
+                        <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                            <p class="text-xs font-black text-slate-900 uppercase tracking-widest">Notifications</p>
+                            @if($unreadCount > 0)
+                            <form method="POST" action="{{ route('notifications.mark-all-read') }}">
+                                @csrf
+                                <button class="text-[10px] font-bold text-slate-400 hover:text-slate-700 uppercase tracking-widest transition-colors">
+                                    Mark all read
+                                </button>
+                            </form>
+                            @endif
+                        </div>
+
+                        @php
+                            $recentNotifications = $user->notifications()->latest()->take(6)->get();
+                        @endphp
+
+                        @forelse($recentNotifications as $notification)
+                        @php
+                            $data = $notification->data;
+                            $icon = $data['icon'] ?? 'bell';
+                            $iconMap = [
+                                'quote'   => ['path' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'color' => 'text-indigo-500 bg-indigo-50'],
+                                'payment' => ['path' => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z', 'color' => 'text-emerald-500 bg-emerald-50'],
+                                'client'  => ['path' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', 'color' => 'text-amber-500 bg-amber-50'],
+                                'invoice' => ['path' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', 'color' => 'text-sky-500 bg-sky-50'],
+                                'bell'    => ['path' => 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', 'color' => 'text-slate-500 bg-slate-100'],
+                            ];
+                            $ic = $iconMap[$icon] ?? $iconMap['bell'];
+                        @endphp
+                        <a href="{{ $data['url'] ?? route('notifications.index') }}"
+                           class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors {{ $notification->read_at ? 'opacity-60' : '' }}">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-lg {{ $ic['color'] }} flex items-center justify-center mt-0.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $ic['path'] }}"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-bold text-slate-900 leading-tight">{{ $data['title'] ?? 'Notification' }}</p>
+                                <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{{ $data['body'] ?? '' }}</p>
+                                <p class="text-[10px] text-slate-400 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
+                            </div>
+                            @if(!$notification->read_at)
+                            <span class="flex-shrink-0 w-2 h-2 rounded-full bg-rose-500 mt-1.5"></span>
+                            @endif
+                        </a>
+                        @empty
+                        <div class="px-4 py-6 text-center">
+                            <p class="text-xs text-slate-400">No notifications yet</p>
+                        </div>
+                        @endforelse
+
+                        <div class="border-t border-slate-100 px-4 py-2">
+                            <a href="{{ route('notifications.index') }}"
+                               class="block text-center text-[11px] font-bold text-slate-500 hover:text-slate-900 uppercase tracking-widest transition-colors">
+                                View all notifications
+                            </a>
+                        </div>
+                    </x-slot>
+                </x-dropdown>
 
                 <!-- Workspace Dropdown -->
                 <x-dropdown align="right" width="64">
