@@ -17,6 +17,7 @@ use App\Http\Controllers\ServiceComboController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\ServiceCategoryController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\NotificationController;
 
 
 
@@ -67,6 +68,12 @@ Route::post('products/{product}/prices', [ProductPriceController::class, 'store'
 
     // Booking menu
     Route::get('booking', [BookingController::class, 'menu'])->name('booking.menu');
+
+    // Notifications
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.mark-read');
+    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+    Route::delete('notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
 
 

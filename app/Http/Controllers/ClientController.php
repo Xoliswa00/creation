@@ -12,6 +12,7 @@ use App\Models\company_invitations;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\URL;
+use App\Notifications\NewClientNotification;
 
 
 
@@ -133,6 +134,12 @@ public function store(Request $request)
             ])
         );
     }
+
+    auth()->user()->notify(new NewClientNotification(
+        clientName:  $client->name,
+        clientEmail: $client->email,
+        clientId:    $client->id,
+    ));
 
     return redirect()
         ->route('clients.index')

@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\PaymentReceivedNotification;
 
 
 
@@ -60,6 +61,13 @@ class PaymentController extends Controller
             if ($totalPaid >= $invoice->total) {
                 $invoice->update(['status' => 'paid']);
             }
+
+            auth()->user()->notify(new PaymentReceivedNotification(
+                invoiceNumber: $invoice->invoice_number ?? "INV-{$invoice->id}",
+                amount:        (float) $validated['amount'],
+                clientName:    optional($invoice->client)->name ?? 'Client',
+                invoiceId:     $invoice->id,
+            ));
 
             return $payment;
         });

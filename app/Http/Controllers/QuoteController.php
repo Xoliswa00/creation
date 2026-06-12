@@ -11,6 +11,7 @@ use App\Models\Client;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Notifications\QuoteStatusNotification;
 
 
 
@@ -141,27 +142,48 @@ public function create()
 
     public function send($id)
     {
-        $quote = Quote::findOrFail($id);
+        $quote = Quote::with('client')->findOrFail($id);
 
         $quote->update(['status' => 'sent']);
+
+        auth()->user()->notify(new QuoteStatusNotification(
+            quoteNumber: $quote->quote_number,
+            status:      'sent',
+            clientName:  optional($quote->client)->name ?? 'Client',
+            quoteId:     $quote->id,
+        ));
 
         return back();
     }
 
     public function approve($id)
     {
-        $quote = Quote::findOrFail($id);
+        $quote = Quote::with('client')->findOrFail($id);
 
         $quote->update(['status' => 'approved']);
+
+        auth()->user()->notify(new QuoteStatusNotification(
+            quoteNumber: $quote->quote_number,
+            status:      'approved',
+            clientName:  optional($quote->client)->name ?? 'Client',
+            quoteId:     $quote->id,
+        ));
 
         return back();
     }
 
     public function reject($id)
     {
-        $quote = Quote::findOrFail($id);
+        $quote = Quote::with('client')->findOrFail($id);
 
         $quote->update(['status' => 'rejected']);
+
+        auth()->user()->notify(new QuoteStatusNotification(
+            quoteNumber: $quote->quote_number,
+            status:      'rejected',
+            clientName:  optional($quote->client)->name ?? 'Client',
+            quoteId:     $quote->id,
+        ));
 
         return back();
     }
