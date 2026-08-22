@@ -16,9 +16,11 @@ class product extends Model
         'price',
         'billing_type',
         'vat_rate',
-
         'product_group_id',
         'product_category_id',
+        'service_category_id',
+        'duration_minutes',
+        'is_active',
     ];
     public function company()
     {
@@ -58,10 +60,26 @@ class product extends Model
     {
         return $this->hasMany(product_price::class, 'product_id');
     }
+
     public function prices()
-{
-    return $this->hasMany(product_price::class);
-}
+    {
+        return $this->hasMany(product_price::class);
+    }
+
+    public function serviceCategory()
+    {
+        return $this->belongsTo(ServiceCategory::class, 'service_category_id');
+    }
+
+    public function getDurationLabelAttribute(): ?string
+    {
+        if (! $this->duration_minutes) return null;
+        $h = intdiv($this->duration_minutes, 60);
+        $m = $this->duration_minutes % 60;
+        if ($h > 0 && $m > 0) return "{$h}h {$m}min";
+        if ($h > 0) return "{$h}h";
+        return "{$m}min";
+    }
     
 
 

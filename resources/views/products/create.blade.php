@@ -73,6 +73,47 @@
                     </div>
                 </div>
 
+                {{-- SECTION: BOOKING / SERVICE CATEGORY --}}
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="bg-slate-50/50 px-6 py-3 border-b border-slate-200 flex items-center justify-between">
+                        <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500">Booking Configuration</h3>
+                        <a href="{{ route('service-categories.create') }}" target="_blank"
+                           class="text-[10px] font-black text-amber-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
+                            + New Category
+                        </a>
+                    </div>
+                    <div class="p-6 space-y-5">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold uppercase text-slate-400 px-1">Service Category</label>
+                                <select name="service_category_id"
+                                        class="w-full border-slate-200 focus:border-amber-400 focus:ring-amber-400 rounded-xl text-sm bg-slate-50/30">
+                                    <option value="">— Uncategorized —</option>
+                                    @foreach($serviceCategories as $cat)
+                                        <option value="{{ $cat->id }}"
+                                                {{ old('service_category_id') == $cat->id ? 'selected' : '' }}>
+                                            {{ $cat->icon ? $cat->icon . ' ' : '' }}{{ $cat->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if($serviceCategories->isEmpty())
+                                    <p class="text-[10px] text-amber-500 px-1 mt-1">No categories yet —
+                                        <a href="{{ route('service-categories.create') }}" class="underline font-bold">create one</a>.
+                                    </p>
+                                @endif
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold uppercase text-slate-400 px-1">Duration (minutes)</label>
+                                <input type="number" name="duration_minutes" min="1" max="480"
+                                       value="{{ old('duration_minutes') }}"
+                                       placeholder="e.g. 60"
+                                       class="w-full border-slate-200 focus:border-amber-400 focus:ring-amber-400 rounded-xl text-sm">
+                                <p class="text-[10px] text-slate-400 px-1">Shown to clients on the booking menu</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- SECTION: ITEMS / ADD-ONS --}}
                 <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                     <div class="bg-slate-50/50 px-6 py-3 border-b border-slate-200 flex justify-between items-center">
